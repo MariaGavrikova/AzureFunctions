@@ -1,0 +1,15 @@
+{
+  "generatedBy": "Microsoft.NET.Sdk.Functions-1.0.14",
+  "configurationSource": "attributes",
+  "bindings": [
+    {
+      "type": "queueTrigger",
+      "queueName": "queue-trigger",
+      "connection": "StorageAccountConnectionString",
+      "name": "myQueueItem"
+    }
+  ],
+  "disabled": false,
+  "scriptFile": "../bin/AzureFunctions.dll",
+  "entryPoint": "AzureFunctions.QueueFileFunction.Run"
+}
