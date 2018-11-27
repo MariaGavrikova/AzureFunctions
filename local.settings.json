@@ -1,8 +1,0 @@
-{
-    "IsEncrypted": false,
-  "Values": {
-    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "AzureWebJobsDashboard": "UseDevelopmentStorage=true",
-    "StorageAccountConnectionString": "DefaultEndpointsProtocol=https;AccountName=adventureworksrg1diag867;AccountKey=l9nckJx7Ki6+DihJMAr3Bp85EB8OHohxPet8W9gmt/xdczv+pQV35WCV1qB134aMNAeWIFHbzMk9Eh7901xbfQ==;EndpointSuffix=core.windows.net"
-  }
-}
