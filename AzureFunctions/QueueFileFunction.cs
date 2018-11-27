@@ -18,16 +18,16 @@ namespace AzureFunctions
     {
         [FunctionName("QueueFileFunction")]
         public static async Task Run(
-            [QueueTrigger("adventure-works-documents-queue", Connection = "StorageAccountConnectionString")]string queueItem,
+            [QueueTrigger("adventure-works-documents-queue", Connection = "AzureWebJobsStorage")]string queueItem,
             ILogger log)
         {
             try
             {
                 var queueInfo = ParseFileId(queueItem);
-                var storageConnectionString = Environment.GetEnvironmentVariable("StorageAccountConnectionString");              
+                var storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");              
                 var blobName = Environment.GetEnvironmentVariable("BlobName");                                  
                 queueInfo.Data = await ReadFromBlobAsync(storageConnectionString, blobName, queueInfo.FileId);
-                
+
                 var connectionString = Environment.GetEnvironmentVariable("SqlConnectionString");
                 await SaveToDbAsync(connectionString, queueInfo);               
                 
