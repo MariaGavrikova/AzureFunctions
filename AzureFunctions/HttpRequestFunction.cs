@@ -120,7 +120,7 @@ namespace AzureFunctions
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                var selectDoc = @"select Top 1 FileName, Document from [Production].[Document] where " +
+                var selectDoc = @"select FileName, Document from [Production].[Document] where " +
                     "FileName = @fileName or rowguid = @id or CAST([DocumentNode] AS nvarchar(100)) = @path";
                 using (var cmd = new SqlCommand(selectDoc, connection))
                 {
