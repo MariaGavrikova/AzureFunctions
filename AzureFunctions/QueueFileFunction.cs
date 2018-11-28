@@ -54,7 +54,7 @@ namespace AzureFunctions
             }   
         }
 
-        private static async Task SaveToDbAsync(string connectionString, QueueItemInfo queueInfo)
+        private static async Task SaveToDbAsync(string connectionString, FunctionFileInfo queueInfo)
         {
             using (var connection = new SqlConnection(connectionString))
             {
@@ -95,11 +95,11 @@ namespace AzureFunctions
             }            
         }
 
-        private static QueueItemInfo ParseFileId(string queueMessage)
+        private static FunctionFileInfo ParseFileId(string queueMessage)
         {
             var messageParts = queueMessage.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
             var keyValues = messageParts.Select(x => x.Split(':')).ToDictionary(x => x[0], x => x[1]);
-            return new QueueItemInfo()
+            return new FunctionFileInfo()
             {
                 FileId = keyValues["Azure Blob file name"].Trim(),
                 FileName = keyValues["File name"].Trim()

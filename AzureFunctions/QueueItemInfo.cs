@@ -4,7 +4,7 @@ using System.Text;
 
 namespace AzureFunctions
 {
-    class QueueItemInfo
+    class FunctionFileInfo
     {
         public string FileId { get; set; }
 
