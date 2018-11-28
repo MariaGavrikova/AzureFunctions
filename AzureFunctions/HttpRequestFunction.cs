@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +13,10 @@ using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.WindowsAzure.Storage;
+using Microsoft.WindowsAzure.Storage.Auth;
+using Microsoft.WindowsAzure.Storage.Blob;
+using Microsoft.WindowsAzure.Storage.Queue;
 
 namespace AzureFunctions
 {
@@ -39,24 +44,52 @@ namespace AzureFunctions
             {
                 var storageConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
                 var blobName = Environment.GetEnvironmentVariable("BlobName");
+                var blob = GetBlobContainer(storageConnectionString, blobName);
+                var queueName = Environment.GetEnvironmentVariable("QueueName");
+                var queue = GetQueue(storageConnectionString, queueName);
+                foreach (var file in request.Form.Files)
+                {
+                    string blobFileId;
+                    using (Stream receiveStream = file.OpenReadStream())
+                    {
+                        blobFileId = await SaveToBlobAsync(blob, receiveStream);                                           
+                    }
+
+                    await SendNotificationAsync(queue, file.FileName, blobFileId, file.Length);
+                }
+                return new OkResult();
             }
         }
 
-        private static async Task SaveAsync(Stream document, string fileName, long size)
+        private static CloudBlobContainer GetBlobContainer(string storageConnectionString, string blobName)
         {
             var storageAccount = CloudStorageAccount.Parse(storageConnectionString);
             var blobClient = storageAccount.CreateCloudBlobClient();
             var container = blobClient.GetContainerReference(blobName);
+            return container;
+        }
+
+        private static async Task<string> SaveToBlobAsync(CloudBlobContainer container, Stream document)
+        {            
             var fileId = Guid.NewGuid().ToString();
-            var blob = container.GetBlockBlobReference($"{blobName}/{fileId}");            
+            var blob = container.GetBlockBlobReference($"{container.Name}/{fileId}");            
             using (document)
             {
                 await blob.UploadFromStreamAsync(document);
-            }
+            }            
+            return fileId;
+        }
 
-            var queue = _queueClient.GetQueueReference(Queue);
-            queue.CreateIfNotExists();
+        private static CloudQueue GetQueue(string storageConnectionString, string queueName)
+        {
+            var storageAccount = CloudStorageAccount.Parse(storageConnectionString);
+            var queueClient = storageAccount.CreateCloudQueueClient();
+            var container = queueClient.GetQueueReference(queueName);
+            return container;
+        }
 
+        private static async Task SendNotificationAsync(CloudQueue queue, string fileName, string fileId, long size)
+        {                     
             var stringBuilder = new StringBuilder();
             stringBuilder.AppendLine($"File name: {fileName}");
             stringBuilder.AppendLine($"Azure Blob file name: {fileId}");
