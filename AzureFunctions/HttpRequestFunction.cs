@@ -128,13 +128,13 @@ namespace AzureFunctions
                     Guid id;
                     if (Guid.TryParse(data, out id))
                     {
-                        cmd.CommandText += "or rowguid = @id";
+                        cmd.CommandText += " or rowguid = @id";
                         cmd.Parameters.Add("@id", System.Data.SqlDbType.UniqueIdentifier).Value = id;
                     }
                     
                     if (_hierarchyIdRegex.IsMatch(data))
                     {
-                        cmd.CommandText += "or CAST([DocumentNode] AS nvarchar(100)) = @path";
+                        cmd.CommandText += " or CAST([DocumentNode] AS nvarchar(100)) = @path";
                         cmd.Parameters.Add("@path", System.Data.SqlDbType.NVarChar).Value = data;
                     }
 
