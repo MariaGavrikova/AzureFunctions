@@ -120,15 +120,23 @@ namespace AzureFunctions
             using (var connection = new SqlConnection(connectionString))
             {
                 await connection.OpenAsync();
-                var selectDoc = @"select FileName, Document from [Production].[Document] where " +
-                    "FileName = @fileName or rowguid = @id or CAST([DocumentNode] AS nvarchar(100)) = @path";
+                var selectDoc = @"select FileName, Document from [Production].[Document] where FileName = @fileName";
                 using (var cmd = new SqlCommand(selectDoc, connection))
                 {
                     cmd.Parameters.Add("@fileName", System.Data.SqlDbType.NVarChar).Value = data;
+
                     Guid id;
-                    Guid.TryParse(data, out id);
-                    cmd.Parameters.Add("@id", System.Data.SqlDbType.UniqueIdentifier).Value = id;
-                    cmd.Parameters.Add("@path", System.Data.SqlDbType.NVarChar).Value = _hierarchyIdRegex.IsMatch(data) ? data : "/";
+                    if (Guid.TryParse(data, out id))
+                    {
+                        cmd.CommandText += "or rowguid = @id";
+                        cmd.Parameters.Add("@id", System.Data.SqlDbType.UniqueIdentifier).Value = id;
+                    }
+                    
+                    if (_hierarchyIdRegex.IsMatch(data))
+                    {
+                        cmd.CommandText += "or CAST([DocumentNode] AS nvarchar(100)) = @path";
+                        cmd.Parameters.Add("@path", System.Data.SqlDbType.NVarChar).Value = data;
+                    }
 
                     using (var dataReader = await cmd.ExecuteReaderAsync())
                     {
