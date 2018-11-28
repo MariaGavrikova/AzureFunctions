@@ -31,7 +31,7 @@ namespace AzureFunctions
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
-            if (request.Method == "get")
+            if (String.Equals(request.Method, "get", StringComparison.InvariantCultureIgnoreCase))
             {
                 string name = request.Query["name"];
                 var connectionString = Environment.GetEnvironmentVariable("SqlConnectionString");
@@ -119,7 +119,11 @@ namespace AzureFunctions
                         if (dataReader.HasRows)
                         {
                             await dataReader.ReadAsync();
-                            result.Data = (byte[])dataReader["Document"] ?? new byte[0];
+                            var content = dataReader["Document"];
+                            if (content != DBNull.Value)
+                            {
+                                result.Data = (byte[])content;
+                            }
                             result.FileName = (string)dataReader["FileName"];
                         }
                     }
