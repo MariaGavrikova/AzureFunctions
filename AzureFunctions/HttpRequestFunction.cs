@@ -31,14 +31,28 @@ namespace AzureFunctions
         {
             log.LogInformation("C# HTTP trigger function processed a request.");
 
+            IActionResult result;
             if (String.Equals(request.Method, "get", StringComparison.InvariantCultureIgnoreCase))
             {
                 string name = request.Query["name"];
                 var connectionString = Environment.GetEnvironmentVariable("SqlConnectionString");
                 var file = await GetFromDbAsync(connectionString, name);
-                return name != null && file.Data != null
-                   ? (ActionResult)new FileContentResult(file.Data, "application/msword") { FileDownloadName = file.FileName }
-                   : new BadRequestObjectResult("File not found. Please pass a name on the query string");
+
+                if (name != null && file.Data != null)
+                {
+                    if (file.Data.Length > 0)
+                    {
+                        result = new FileContentResult(file.Data, "application/msword") { FileDownloadName = file.FileName };
+                    }
+                    else
+                    {
+                        result = new BadRequestObjectResult("File found but it is empty.");
+                    }
+                }    
+                else
+                {
+                    result = new BadRequestObjectResult("File not found. Please pass a name on the query string");
+                }
             }
             else
             {
@@ -57,8 +71,10 @@ namespace AzureFunctions
 
                     await SendNotificationAsync(queue, file.FileName, blobFileId, file.Length);
                 }
-                return new OkResult();
+                result = new OkResult();
             }
+
+            return result;
         }
 
         private static CloudBlobContainer GetBlobContainer(string storageConnectionString, string blobName)
@@ -120,10 +136,7 @@ namespace AzureFunctions
                         {
                             await dataReader.ReadAsync();
                             var content = dataReader["Document"];
-                            if (content != DBNull.Value)
-                            {
-                                result.Data = (byte[])content;
-                            }
+                            result.Data = content != DBNull.Value ? (byte[])content : new byte[0];                            
                             result.FileName = (string)dataReader["FileName"];
                         }
                     }
